@@ -32,12 +32,12 @@ rarity_map = {
 
 # === Mastery Rewards ===
 mastery_rewards = {
-    "starter": {300: {"coins": 750}, 800: {"bling": 100}, 1500: {"credits": 75},
-                2600: {"bling": 200}, 4000: {"coins": 1250}, 5800: {"credits": 150}},
-    "mythic": {300: {"coins": 1000}, 800: {"bling": 150}, 1500: {"credits": 100},
-               2600: {"bling": 300}, 4000: {"coins": 2000}, 5800: {"credits": 200}},
-    "ultra_legendary": {300: {"coins": 1500}, 800: {"bling": 200}, 1500: {"credits": 150},
-                         2600: {"bling": 400}, 4000: {"coins": 3000}, 5800: {"credits": 300}}
+    "starter": {300: {"coins": 750}, 800: {"PowerPoints": 100}, 1500: {"credits": 75},
+                2600: {"PowerPoints": 200}, 4000: {"coins": 1250}, 5800: {"credits": 150}},
+    "mythic": {300: {"coins": 1000}, 800: {"PowerPoints": 150}, 1500: {"credits": 100},
+               2600: {"PowerPoints": 300}, 4000: {"coins": 2000}, 5800: {"credits": 200}},
+    "ultra_legendary": {300: {"coins": 1500}, 800: {"PowerPoints": 200}, 1500: {"credits": 150},
+                         2600: {"PowerPoints": 400}, 4000: {"coins": 3000}, 5800: {"credits": 300}}
 }
 
 # === Mastery Rank Tiers ===
@@ -75,12 +75,12 @@ def fetch_mastery(tag):
     return data
 
 def compute_rewards(points):
-    total = {"coins": 0, "bling": 0, "credits": 0}
+    total = {"coins": 0, "PowerPoints": 0, "credits": 0}
     brawler_data = []
     for name, pts in points.items():
         tier = rarity_map.get(name)
         rank = get_rank(pts)
-        earned = {"coins": 0, "bling": 0, "credits": 0}
+        earned = {"coins": 0, "PowerPoints": 0, "credits": 0}
         if tier:
             for thr, reward in mastery_rewards[tier].items():
                 if pts >= thr:
@@ -91,7 +91,7 @@ def compute_rewards(points):
     return total, brawler_data
 
 def compute_remaining_rewards(points):
-    remaining = {"coins": 0, "bling": 0, "credits": 0}
+    remaining = {"coins": 0, "PowerPoints": 0, "credits": 0}
     for name, pts in points.items():
         tier = rarity_map.get(name)
         if not tier:
