@@ -116,7 +116,7 @@ def compute_remaining_rewards(points_data):
 
 # === Streamlit App ===
 st.set_page_config(page_title="Brawl Stars Mastery Tracker", layout="wide")
-st.title("🟡 Brawl Stars Mastery Reward Tracker")
+st.title("🟡 Brawl Stars Mastery Reward Tracker (Made By: Youssef Ehab)")
 
 tag = st.text_input("Enter your Brawl Stars tag (without #):")
 search = st.button("🔍 Search")
