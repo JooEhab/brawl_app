@@ -3,8 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import time
 
-# === Rarity Map ===
-rarity_map = {
+rarity_map = {Add commentMore actions
     "Shelly": "starter", "Nita": "starter", "Colt": "starter", "Bull": "starter",
     "Brock": "starter", "El primo": "starter", "Barley": "starter", "Poco": "starter",
     "Rosa": "starter", "Jessie": "starter", "Dynamike": "starter", "Tick": "starter",
@@ -33,14 +32,15 @@ rarity_map = {
 
 # === Mastery Rewards ===
 mastery_rewards = {
-    "starter": {300: {"coins": 750}, 800: {"PowerPoints": 100}, 1500: {"credits": 75},
-                2600: {"PowerPoints": 200}, 4000: {"coins": 1250}, 5800: {"credits": 150}},
-    "mythic": {300: {"coins": 1000}, 800: {"PowerPoints": 150}, 1500: {"credits": 100},
-               2600: {"PowerPoints": 300}, 4000: {"coins": 2000}, 5800: {"credits": 200}},
-    "ultra_legendary": {300: {"coins": 1500}, 800: {"PowerPoints": 200}, 1500: {"credits": 150},
-                         2600: {"PowerPoints": 400}, 4000: {"coins": 3000}, 5800: {"credits": 300}}
+    "starter": {300: {"coins": 750}, 800: {"bling": 100}, 1500: {"credits": 75},
+                2600: {"bling": 200}, 4000: {"coins": 1250}, 5800: {"credits": 150}},
+    "mythic": {300: {"coins": 1000}, 800: {"bling": 150}, 1500: {"credits": 100},
+               2600: {"bling": 300}, 4000: {"coins": 2000}, 5800: {"credits": 200}},
+    "ultra_legendary": {300: {"coins": 1500}, 800: {"bling": 200}, 1500: {"credits": 150},
+                         2600: {"bling": 400}, 4000: {"coins": 3000}, 5800: {"credits": 300}}
 }
 
+# === Mastery Rank Tiers ===
 mastery_ranks = [
     (24800, "Gold III"), (16800, "Gold II"), (10300, "Gold I"),
     (5800, "Silver III"), (4000, "Silver II"), (2600, "Silver I"),
