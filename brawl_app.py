@@ -120,7 +120,7 @@ if tag:
             remaining = compute_remaining_rewards(pts)
             st.success("Data loaded!")
 
-            # Display summary in metrics
+            # Display summary
             st.subheader("🎯 Total Rewards Earned")
             cols = st.columns(3)
             cols[0].metric("💰 Coins", rewards["coins"])
@@ -134,11 +134,9 @@ if tag:
             rcols[2].metric("🎟️ Credits", remaining["credits"])
 
             st.subheader("📋 Brawler Mastery Details")
-            sort_by = st.selectbox("Sort brawlers by:", ["Points", "Name"])
-            if sort_by == "Points":
-                brawler_data.sort(key=lambda x: x[1], reverse=True)
-            else:
-                brawler_data.sort(key=lambda x: x[0])
+
+            # Always sort by points descending
+            brawler_data.sort(key=lambda x: x[1], reverse=True)
 
             for name, pts, rank, earned, img_url in brawler_data:
                 with st.container():
