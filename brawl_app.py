@@ -121,11 +121,6 @@ st.title("🟡 Brawl Stars Mastery Reward Tracker")
 tag = st.text_input("Enter your Brawl Stars tag (without #):")
 search = st.button("🔍 Search")
 
-st.markdown("---")
-st.markdown("### 👤 Developer Info")
-st.markdown("**Name:** Youssef Ehab")
-st.markdown("**Email:** [mr.yousifehab@gmail.com](mailto:mr.yousifehab@gmail.com)")
-
 
 if search and tag:
     with st.spinner("Fetching mastery data..."):
@@ -164,3 +159,8 @@ if search and tag:
 
         except Exception as e:
             st.error(f"❌ Could not load data: {e}")
+
+st.markdown("---")
+st.markdown("### 👤 Developer Info")
+st.markdown("**Name:** Youssef Ehab")
+st.markdown("**Email:** [mr.yousifehab@gmail.com](mailto:mr.yousifehab@gmail.com)")
