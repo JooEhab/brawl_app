@@ -32,12 +32,12 @@ rarity_map = {
 
 # === Mastery Rewards ===
 mastery_rewards = {
-    "starter": {300: {"coins": 750}, 800: {"bling": 100}, 1500: {"credits": 75},
-                2600: {"bling": 200}, 4000: {"coins": 1250}, 5800: {"credits": 150}},
-    "mythic": {300: {"coins": 1000}, 800: {"bling": 150}, 1500: {"credits": 100},
-               2600: {"bling": 300}, 4000: {"coins": 2000}, 5800: {"credits": 200}},
-    "ultra_legendary": {300: {"coins": 1500}, 800: {"bling": 200}, 1500: {"credits": 150},
-                         2600: {"bling": 400}, 4000: {"coins": 3000}, 5800: {"credits": 300}}
+    "starter": {300: {"coins": 750}, 800: {"StarPoints": 100}, 1500: {"credits": 75},
+                2600: {"StarPoints": 200}, 4000: {"coins": 1250}, 5800: {"credits": 150}},
+    "mythic": {300: {"coins": 1000}, 800: {"StarPoints": 150}, 1500: {"credits": 100},
+               2600: {"StarPoints": 300}, 4000: {"coins": 2000}, 5800: {"credits": 200}},
+    "ultra_legendary": {300: {"coins": 1500}, 800: {"StarPoints": 200}, 1500: {"credits": 150},
+                         2600: {"StarPoints": 400}, 4000: {"coins": 3000}, 5800: {"credits": 300}}
 }
 
 # === Mastery Rank Tiers ===
