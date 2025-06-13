@@ -41,43 +41,48 @@ mastery_rewards = {
                          2600: {"PowerPoints": 400}, 4000: {"coins": 3000}, 5800: {"credits": 300}}
 }
 
-# === Mastery Rank Tiers ===
 mastery_ranks = [
     (24800, "Gold III"), (16800, "Gold II"), (10300, "Gold I"),
     (5800, "Silver III"), (4000, "Silver II"), (2600, "Silver I"),
     (1500, "Bronze III"), (800, "Bronze II"), (300, "Bronze I"), (0, "Unranked")
 ]
 
-@st.cache_data(show_spinner=False, ttl=300)
-def fetch_mastery(tag):
-    """Cached request to Brawlytix, valid for 5 mins."""
-    url = f"https://brawlytix.com/profile/{tag}"
-    resp = requests.get(url, timeout=15)  # timeout added here
-    resp.raise_for_status()
-    soup = BeautifulSoup(resp.text, "html.parser")
-    data = {}
-    rows = soup.select("#brawlersContainer .brawler-row")
-    for row in rows:
-        name_elem = row.select_one(".brawler-name")
-        pts_elem = row.select_one(".brawler-mastery span")
-        img_elem = row.select_one(".brawler-left img")
-        if not name_elem or not pts_elem or not img_elem:
-            continue
-        name = name_elem.text.strip().capitalize()
-        pts_text = pts_elem.get_text(strip=True).replace(",", "").split()[0]
-        try:
-            pts = int(pts_text)
-        except:
-            continue
-        img_url = img_elem.get("src")
-        data[name] = {"points": pts, "img": img_url}
-    return data
-
 def get_rank(points):
     for threshold, rank in mastery_ranks:
         if points >= threshold:
             return rank
     return "Unranked"
+
+def fetch_mastery(tag, max_retries=3, delay=2):
+    url = f"https://brawlytix.com/profile/{tag}"
+    for attempt in range(max_retries):
+        try:
+            resp = requests.get(url, timeout=10)
+            resp.raise_for_status()
+            soup = BeautifulSoup(resp.text, "html.parser")
+            data = {}
+            rows = soup.select("#brawlersContainer .brawler-row")
+            for row in rows:
+                name_elem = row.select_one(".brawler-name")
+                pts_elem = row.select_one(".brawler-mastery span")
+                img_elem = row.select_one(".brawler-left img")
+                if not name_elem or not pts_elem or not img_elem:
+                    continue
+                name = name_elem.text.strip().capitalize()
+                pts_text = pts_elem.get_text(strip=True).replace(",", "").split()[0]
+                try:
+                    pts = int(pts_text)
+                except:
+                    continue
+                img_url = img_elem.get("src")
+                data[name] = {"points": pts, "img": img_url}
+            return data
+        except Exception as e:
+            if attempt < max_retries - 1:
+                st.warning(f"Attempt {attempt+1} failed, retrying...")
+                time.sleep(delay)
+            else:
+                raise RuntimeError(f"Failed to fetch data after {max_retries} tries: {e}")
 
 def compute_rewards(points_data):
     total = {"coins": 0, "PowerPoints": 0, "credits": 0}
@@ -113,19 +118,18 @@ def compute_remaining_rewards(points_data):
 st.set_page_config(page_title="Brawl Stars Mastery Tracker", layout="wide")
 st.title("🟡 Brawl Stars Mastery Reward Tracker")
 
-with st.form(key="tag_form"):
-    tag_input = st.text_input("Enter your Brawl Stars tag (without #):", key="tag")
-    submit_button = st.form_submit_button("🔍 Search")
+tag = st.text_input("Enter your Brawl Stars tag (without #):")
+search = st.button("🔍 Search")
 
-if submit_button and tag_input:
-    with st.spinner("Fetching mastery data... please wait ⏳"):
+if search and tag:
+    with st.spinner("Fetching mastery data..."):
         try:
-            pts = fetch_mastery(tag_input.strip().upper())
+            pts = fetch_mastery(tag)
             rewards, brawler_data = compute_rewards(pts)
             remaining = compute_remaining_rewards(pts)
             st.success("Data loaded!")
 
-            # Summary
+            # Display summary
             st.subheader("🎯 Total Rewards Earned")
             cols = st.columns(3)
             cols[0].metric("💰 Coins", rewards["coins"])
@@ -139,8 +143,8 @@ if submit_button and tag_input:
             rcols[2].metric("🎟️ Credits", remaining["credits"])
 
             st.subheader("📋 Brawler Mastery Details")
-
             brawler_data.sort(key=lambda x: x[1], reverse=True)
+
             for name, pts, rank, earned, img_url in brawler_data:
                 with st.container():
                     col1, col2 = st.columns([1, 5])
@@ -153,4 +157,4 @@ if submit_button and tag_input:
                             st.caption(f"Earned: 💰 {earned['coins']} | ⚡ {earned['PowerPoints']} | 🎟️ {earned['credits']}")
 
         except Exception as e:
-            st.error("⚠️ Failed to fetch data. This might be due to slow internet or a server issue. Please try again.")
+            st.error(f"❌ Could not load data: {e}")
