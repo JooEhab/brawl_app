@@ -3,6 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import time
 
+# === Rarity Map ===
 rarity_map = {
     "Shelly": "starter", "Nita": "starter", "Colt": "starter", "Bull": "starter",
     "Brock": "starter", "El primo": "starter", "Barley": "starter", "Poco": "starter",
@@ -40,7 +41,6 @@ mastery_rewards = {
                          2600: {"PowerPoints": 400}, 4000: {"coins": 3000}, 5800: {"credits": 300}}
 }
 
-# === Mastery Rank Tiers ===
 mastery_ranks = [
     (24800, "Gold III"), (16800, "Gold II"), (10300, "Gold I"),
     (5800, "Silver III"), (4000, "Silver II"), (2600, "Silver I"),
