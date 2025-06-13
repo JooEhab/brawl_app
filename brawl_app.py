@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import time
 
-rarity_map = {Add commentMore actions
+rarity_map = {
     "Shelly": "starter", "Nita": "starter", "Colt": "starter", "Bull": "starter",
     "Brock": "starter", "El primo": "starter", "Barley": "starter", "Poco": "starter",
     "Rosa": "starter", "Jessie": "starter", "Dynamike": "starter", "Tick": "starter",
