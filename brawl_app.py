@@ -55,32 +55,40 @@ def get_rank(points):
 
 def fetch_mastery(tag):
     url = f"https://brawlytix.com/profile/{tag}"
-    resp = requests.get(url)
-    resp.raise_for_status()
+    try:
+        resp = requests.get(url, timeout=10)
+        resp.raise_for_status()
+    except requests.RequestException as e:
+        raise RuntimeError(f"Request failed or timed out: {e}")
+    
     soup = BeautifulSoup(resp.text, "html.parser")
     data = {}
     rows = soup.select("#brawlersContainer .brawler-row")
+    if not rows:
+        raise RuntimeError("No brawler rows found. Page structure may have changed.")
+    
     for row in rows:
         name_elem = row.select_one(".brawler-name")
         pts_elem = row.select_one(".brawler-mastery span")
-        img_elem = row.select_one(".brawler-left img")
-        if not name_elem or not pts_elem or not img_elem:
+        icon_elem = row.select_one("img")
+        if not name_elem or not pts_elem or not icon_elem:
             continue
         name = name_elem.text.strip().capitalize()
         pts_text = pts_elem.get_text(strip=True).replace(",", "").split()[0]
+        icon = icon_elem["src"]
         try:
             pts = int(pts_text)
         except:
             continue
-        img_url = img_elem.get("src")
-        data[name] = {"points": pts, "img": img_url}
+        data[name] = {"points": pts, "icon": icon}
     return data
 
-def compute_rewards(points_data):
+def compute_rewards(points):
     total = {"coins": 0, "PowerPoints": 0, "credits": 0}
     brawler_data = []
-    for name, info in points_data.items():
+    for name, info in points.items():
         pts = info["points"]
+        icon = info["icon"]
         tier = rarity_map.get(name)
         rank = get_rank(pts)
         earned = {"coins": 0, "PowerPoints": 0, "credits": 0}
@@ -90,12 +98,12 @@ def compute_rewards(points_data):
                     for k, v in reward.items():
                         earned[k] += v
                         total[k] += v
-        brawler_data.append((name, pts, rank, earned, info["img"]))
+        brawler_data.append((name, pts, rank, earned, icon))
     return total, brawler_data
 
-def compute_remaining_rewards(points_data):
+def compute_remaining_rewards(points):
     remaining = {"coins": 0, "PowerPoints": 0, "credits": 0}
-    for name, info in points_data.items():
+    for name, info in points.items():
         pts = info["points"]
         tier = rarity_map.get(name)
         if not tier:
@@ -106,48 +114,34 @@ def compute_remaining_rewards(points_data):
                     remaining[k] += v
     return remaining
 
-# === Streamlit App ===
-st.set_page_config(page_title="Brawl Stars Mastery Tracker", layout="wide")
+# === Streamlit UI ===
 st.title("🟡 Brawl Stars Mastery Reward Tracker")
-
 tag = st.text_input("Enter your Brawl Stars tag (without #):")
 
 if tag:
-    with st.spinner("Fetching mastery data..."):
+    with st.spinner("⏳ Fetching mastery data (may take a few seconds)..."):
         try:
             pts = fetch_mastery(tag)
+        except Exception as e:
+            st.error(f"❌ Failed to load data: {e}")
+        else:
             rewards, brawler_data = compute_rewards(pts)
             remaining = compute_remaining_rewards(pts)
-            st.success("Data loaded!")
 
-            # Display summary
+            st.success("✅ Data loaded!")
+
             st.subheader("🎯 Total Rewards Earned")
-            cols = st.columns(3)
-            cols[0].metric("💰 Coins", rewards["coins"])
-            cols[1].metric("⚡ PowerPoints", rewards["PowerPoints"])
-            cols[2].metric("🎟️ Credits", rewards["credits"])
+            st.json(rewards)
 
             st.subheader("🧾 Remaining Rewards to Earn")
-            rcols = st.columns(3)
-            rcols[0].metric("💰 Coins", remaining["coins"])
-            rcols[1].metric("⚡ PowerPoints", remaining["PowerPoints"])
-            rcols[2].metric("🎟️ Credits", remaining["credits"])
+            st.json(remaining)
 
             st.subheader("📋 Brawler Mastery Details")
 
-            # Always sort by points descending
             brawler_data.sort(key=lambda x: x[1], reverse=True)
-
-            for name, pts, rank, earned, img_url in brawler_data:
-                with st.container():
-                    col1, col2 = st.columns([1, 5])
-                    with col1:
-                        st.image(img_url, width=60)
-                    with col2:
-                        st.markdown(f"**{name}** — `{pts}` pts")
-                        st.markdown(f"🎖 Rank: **{rank}**")
-                        if any(earned.values()):
-                            st.caption(f"Earned: 💰 {earned['coins']} | ⚡ {earned['PowerPoints']} | 🎟️ {earned['credits']}")
-
-        except Exception as e:
-            st.error(f"Failed to fetch data: {e}")
+            for name, pts, rank, earned, icon in brawler_data:
+                col1, col2 = st.columns([1, 4])
+                with col1:
+                    st.image(icon, width=40)
+                with col2:
+                    st.markdown(f"**{name}** — {pts} pts | Rank: {rank}")
