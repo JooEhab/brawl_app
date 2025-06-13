@@ -63,7 +63,8 @@ def fetch_mastery(tag):
     for row in rows:
         name_elem = row.select_one(".brawler-name")
         pts_elem = row.select_one(".brawler-mastery span")
-        if not name_elem or not pts_elem:
+        img_elem = row.select_one(".brawler-left img")
+        if not name_elem or not pts_elem or not img_elem:
             continue
         name = name_elem.text.strip().capitalize()
         pts_text = pts_elem.get_text(strip=True).replace(",", "").split()[0]
@@ -71,13 +72,15 @@ def fetch_mastery(tag):
             pts = int(pts_text)
         except:
             continue
-        data[name] = pts
+        img_url = img_elem.get("src")
+        data[name] = {"points": pts, "img": img_url}
     return data
 
-def compute_rewards(points):
+def compute_rewards(points_data):
     total = {"coins": 0, "PowerPoints": 0, "credits": 0}
     brawler_data = []
-    for name, pts in points.items():
+    for name, info in points_data.items():
+        pts = info["points"]
         tier = rarity_map.get(name)
         rank = get_rank(pts)
         earned = {"coins": 0, "PowerPoints": 0, "credits": 0}
@@ -87,12 +90,13 @@ def compute_rewards(points):
                     for k, v in reward.items():
                         earned[k] += v
                         total[k] += v
-        brawler_data.append((name, pts, rank, earned))
+        brawler_data.append((name, pts, rank, earned, info["img"]))
     return total, brawler_data
 
-def compute_remaining_rewards(points):
+def compute_remaining_rewards(points_data):
     remaining = {"coins": 0, "PowerPoints": 0, "credits": 0}
-    for name, pts in points.items():
+    for name, info in points_data.items():
+        pts = info["points"]
         tier = rarity_map.get(name)
         if not tier:
             continue
@@ -103,7 +107,9 @@ def compute_remaining_rewards(points):
     return remaining
 
 # === Streamlit App ===
+st.set_page_config(page_title="Brawl Stars Mastery Tracker", layout="wide")
 st.title("🟡 Brawl Stars Mastery Reward Tracker")
+
 tag = st.text_input("Enter your Brawl Stars tag (without #):")
 
 if tag:
@@ -112,14 +118,20 @@ if tag:
             pts = fetch_mastery(tag)
             rewards, brawler_data = compute_rewards(pts)
             remaining = compute_remaining_rewards(pts)
-
             st.success("Data loaded!")
 
+            # Display summary in metrics
             st.subheader("🎯 Total Rewards Earned")
-            st.write(rewards)
+            cols = st.columns(3)
+            cols[0].metric("💰 Coins", rewards["coins"])
+            cols[1].metric("⚡ PowerPoints", rewards["PowerPoints"])
+            cols[2].metric("🎟️ Credits", rewards["credits"])
 
             st.subheader("🧾 Remaining Rewards to Earn")
-            st.write(remaining)
+            rcols = st.columns(3)
+            rcols[0].metric("💰 Coins", remaining["coins"])
+            rcols[1].metric("⚡ PowerPoints", remaining["PowerPoints"])
+            rcols[2].metric("🎟️ Credits", remaining["credits"])
 
             st.subheader("📋 Brawler Mastery Details")
             sort_by = st.selectbox("Sort brawlers by:", ["Points", "Name"])
@@ -128,7 +140,16 @@ if tag:
             else:
                 brawler_data.sort(key=lambda x: x[0])
 
-            for name, pts, rank, earned in brawler_data:
-                st.markdown(f"**{name}** — {pts} pts | Rank: {rank}")
+            for name, pts, rank, earned, img_url in brawler_data:
+                with st.container():
+                    col1, col2 = st.columns([1, 5])
+                    with col1:
+                        st.image(img_url, width=60)
+                    with col2:
+                        st.markdown(f"**{name}** — `{pts}` pts")
+                        st.markdown(f"🎖 Rank: **{rank}**")
+                        if any(earned.values()):
+                            st.caption(f"Earned: 💰 {earned['coins']} | ⚡ {earned['PowerPoints']} | 🎟️ {earned['credits']}")
+
         except Exception as e:
             st.error(f"Failed to fetch data: {e}")
