@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
+import time
 
 # === Rarity Map ===
 rarity_map = {
@@ -53,28 +54,38 @@ def get_rank(points):
             return rank
     return "Unranked"
 
-def fetch_mastery(tag):
+
+def fetch_mastery(tag, retries=3, timeout=10):
     url = f"https://brawlytix.com/profile/{tag}"
-    resp = requests.get(url)
-    resp.raise_for_status()
-    soup = BeautifulSoup(resp.text, "html.parser")
-    data = {}
-    rows = soup.select("#brawlersContainer .brawler-row")
-    for row in rows:
-        name_elem = row.select_one(".brawler-name")
-        pts_elem = row.select_one(".brawler-mastery span")
-        img_elem = row.select_one(".brawler-left img")
-        if not name_elem or not pts_elem or not img_elem:
-            continue
-        name = name_elem.text.strip().capitalize()
-        pts_text = pts_elem.get_text(strip=True).replace(",", "").split()[0]
+    attempt = 0
+    while attempt < retries:
         try:
-            pts = int(pts_text)
-        except:
-            continue
-        img_url = img_elem.get("src")
-        data[name] = {"points": pts, "img": img_url}
-    return data
+            resp = requests.get(url, timeout=timeout)
+            resp.raise_for_status()
+            soup = BeautifulSoup(resp.text, "html.parser")
+            data = {}
+            rows = soup.select("#brawlersContainer .brawler-row")
+            for row in rows:
+                name_elem = row.select_one(".brawler-name")
+                pts_elem = row.select_one(".brawler-mastery span")
+                img_elem = row.select_one(".brawler-left img")
+                if not name_elem or not pts_elem or not img_elem:
+                    continue
+                name = name_elem.text.strip().capitalize()
+                pts_text = pts_elem.get_text(strip=True).replace(",", "").split()[0]
+                try:
+                    pts = int(pts_text)
+                except:
+                    continue
+                img_url = img_elem.get("src")
+                data[name] = {"points": pts, "img": img_url}
+            return data
+        except (requests.RequestException, requests.Timeout) as e:
+            attempt += 1
+            if attempt < retries:
+                time.sleep(1)  # small wait before retrying
+            else:
+                raise Exception(f"Connection failed after {retries} retries. Reason: {str(e)}")
 
 def compute_rewards(points_data):
     total = {"coins": 0, "PowerPoints": 0, "credits": 0}
